@@ -1,0 +1,612 @@
+<!doctype html>
+<html lang="en">
+   <head>
+      <meta charset="utf-8" />
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <title>Random Aesthetic Generator</title>
+
+      <!-- App Shell Fonts (UI only) -->
+      <link rel="preconnect" href="https://fonts.googleapis.com" />
+      <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+      <link
+         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Source+Sans+3:wght@400;600&display=swap"
+         rel="stylesheet"
+      />
+
+      <style>
+         /* ================================
+       CSS VARIABLES & THEME TOKENS
+       ================================ */
+         :root {
+            --bg: #f9fafb;
+            --bg-card: #ffffff;
+            --text: #111827;
+            --muted: #6b7280;
+            --accent: #6366f1;
+            --border: #e5e7eb;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.06);
+            --radius: 14px;
+            --focus: 2px solid #6366f1;
+         }
+
+         html.theme-dark {
+            --bg: #1e1e1e;
+            --bg-card: #262626;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --border: #3f3f46;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+         }
+
+         /* ================================
+       BASE RESET / APP SHELL
+       ================================ */
+         *,
+         *::before,
+         *::after {
+            box-sizing: border-box;
+         }
+
+         body {
+            margin: 0;
+            font-family: "Source Sans 3", system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.5;
+         }
+
+         h1,
+         h2,
+         h3 {
+            font-family: Inter, system-ui, sans-serif;
+            margin: 0 0 0.5rem 0;
+         }
+
+         a {
+            color: inherit;
+         }
+
+         button {
+            font-family: inherit;
+            font-size: 0.95rem;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--bg-card);
+            color: var(--text);
+            padding: 0.6rem 1rem;
+            cursor: pointer;
+            transition:
+               transform 0.15s ease,
+               background 0.15s ease,
+               box-shadow 0.15s ease;
+         }
+
+         button.primary {
+            background: var(--accent);
+            color: white;
+            border-color: transparent;
+         }
+
+         button:hover {
+            box-shadow: var(--shadow);
+         }
+         button:focus-visible {
+            outline: var(--focus);
+            outline-offset: 2px;
+         }
+
+         /* ================================
+       LAYOUT
+       ================================ */
+         header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 1.5rem 0.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+         }
+
+         main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 1.5rem 3rem;
+            display: grid;
+            gap: 1.5rem;
+         }
+
+         .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+         }
+
+         .card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 1.25rem;
+            box-shadow: var(--shadow);
+         }
+
+         .grid {
+            display: grid;
+            gap: 1.5rem;
+         }
+
+         @media (min-width: 900px) {
+            .grid {
+               grid-template-columns: 2fr 1fr;
+            }
+         }
+
+         /* ================================
+       PALETTE
+       ================================ */
+         .swatches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem;
+         }
+
+         .swatch {
+            flex: 1 1 110px; /* larger default size */
+            min-width: 110px;
+            min-height: 110px; /* ensures a chunkier visual block */
+            border-radius: 12px;
+            padding: 0.65rem;
+            color: #000;
+            cursor: pointer;
+            outline: none;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+         }
+
+         .swatch:focus-visible {
+            outline: var(--focus);
+         }
+
+         .swatch span {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+         }
+
+         .badges {
+            display: flex;
+            gap: 0.25rem;
+            margin-top: 0.25rem;
+         }
+
+         .badge {
+            font-size: 0.65rem;
+            padding: 0.1rem 0.35rem;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.15);
+            color: white;
+         }
+
+         .badge.fail {
+            background: #991b1b;
+         }
+         .badge.pass {
+            background: #166534;
+         }
+
+         /* ================================
+       PREVIEW
+       ================================ */
+         .preview {
+            border: 1px dashed var(--border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            background: #ffffff; /* neutral, never theme-aware */
+            color: #000000;
+         }
+
+         .preview h1 {
+            margin-bottom: 0.25rem;
+         }
+         .preview p {
+            max-width: 60ch;
+         }
+
+         .preview button {
+            margin-top: 0.75rem;
+            background: #111827;
+            color: white;
+            border-radius: 999px;
+         }
+
+         /* ================================
+       FAVORITES
+       ================================ */
+         .favorite {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px solid var(--border);
+         }
+
+         footer {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--muted);
+            padding: 2rem 1rem 1rem;
+         }
+
+         @media (prefers-reduced-motion: no-preference) {
+            .card,
+            .swatch {
+               transition:
+                  opacity 0.2s ease,
+                  transform 0.2s ease;
+            }
+         }
+      </style>
+   </head>
+   <body>
+      <header>
+         <h1>Random Aesthetic Generator</h1>
+         <button id="themeToggle" aria-label="Toggle dark mode">🌙</button>
+      </header>
+
+      <main>
+         <section class="controls">
+            <button class="primary" id="shuffleBtn">Shuffle</button>
+            <button id="saveBtn">Save</button>
+            <button id="copyCssBtn">Copy CSS</button>
+            <button id="exportJsonBtn">Export JSON</button>
+         </section>
+
+         <section class="grid">
+            <div class="card" aria-labelledby="paletteTitle">
+               <h2 id="paletteTitle">Palette</h2>
+               <div id="swatches" class="swatches"></div>
+            </div>
+
+            <div class="card" aria-labelledby="fontsTitle">
+               <h2 id="fontsTitle">Font Pairing</h2>
+               <p id="fontNames" class="muted"></p>
+               <div id="preview" class="preview" aria-live="polite"></div>
+            </div>
+         </section>
+
+         <section class="card" aria-labelledby="favoritesTitle">
+            <h2 id="favoritesTitle">Favorites</h2>
+            <div id="favoritesList"></div>
+         </section>
+      </main>
+
+      <footer>
+         <p>
+            <strong>Contrast ratings:</strong> Badges show whether a color meets
+            <abbr title="Web Content Accessibility Guidelines">WCAG</abbr> 2.1
+            AA requirements for normal text.
+         </p>
+         <p>
+            <span class="badge pass">AA on white</span> means the color has a
+            contrast ratio of at least 4.5:1 against white text backgrounds.<br />
+            <span class="badge pass">AA on black</span> means the same threshold
+            against black text backgrounds.
+         </p>
+         <p>
+            Passing contrast helps ensure text is readable for users with low
+            vision or color-vision deficiencies. Failing colors may still be
+            suitable for large text, decorative elements, or non-text UI.
+         </p>
+         <p>
+            Space = Shuffle · S = Save · C = Copy CSS · Fonts © Google · Static
+            demo
+         </p>
+      </footer>
+
+      <script defer>
+         /* =====================================================
+       DATA: CURATED FONTS & DEFAULT PALETTES
+       ===================================================== */
+         const FONT_PAIRS = [
+            { heading: "Playfair Display", body: "Source Sans 3" },
+            { heading: "Poppins", body: "Inter" },
+            { heading: "Montserrat", body: "Roboto" },
+            { heading: "Merriweather", body: "Source Sans 3" },
+            { heading: "DM Serif Display", body: "Inter" },
+         ];
+
+         const DEFAULTS = {
+            Minimal: {
+               palette: ["#111827", "#374151", "#9ca3af", "#e5e7eb", "#ffffff"],
+               fonts: { heading: "Playfair Display", body: "Source Sans 3" },
+            },
+            Playful: {
+               palette: ["#f472b6", "#fb7185", "#facc15", "#4ade80", "#38bdf8"],
+               fonts: { heading: "Poppins", body: "Inter" },
+            },
+            Bold: {
+               palette: ["#0f172a", "#7c3aed", "#db2777", "#f97316"],
+               fonts: { heading: "Montserrat", body: "Roboto" },
+            },
+         };
+
+         /* =====================================================
+       STATE
+       ===================================================== */
+         let currentPalette = [];
+         let currentFonts = {};
+
+         /* =====================================================
+       UTILITIES
+       ===================================================== */
+         function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+         }
+
+         function getRandomPalette() {
+            const count = randomInt(4, 6);
+            const colors = [];
+            while (colors.length < count) {
+               const color =
+                  "#" +
+                  Math.floor(Math.random() * 0xffffff)
+                     .toString(16)
+                     .padStart(6, "0");
+               colors.push(color);
+            }
+            return colors;
+         }
+
+         function pickFontPair() {
+            return FONT_PAIRS[randomInt(0, FONT_PAIRS.length - 1)];
+         }
+
+         function injectGoogleFont(family) {
+            const id = `font-${family.replace(/\s+/g, "-")}`;
+            if (document.getElementById(id)) return;
+            const link = document.createElement("link");
+            link.id = id;
+            link.rel = "stylesheet";
+            link.href = `https://fonts.googleapis.com/css2?family=${family.replace(/\s+/g, "+")}:wght@400;600;700&display=swap`;
+            document.head.appendChild(link);
+         }
+
+         /* =====================================================
+       CONTRAST CHECKER (WCAG 2.1)
+       ===================================================== */
+         function luminance(hex) {
+            const rgb = hex
+               .replace("#", "")
+               .match(/.{2}/g)
+               .map((v) => parseInt(v, 16) / 255);
+            const a = rgb.map((v) =>
+               v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4),
+            );
+            return 0.2126 * a[0] + 0.7152 * a[1] + 0.0722 * a[2];
+         }
+
+         function contrastRatio(c1, c2) {
+            const l1 = luminance(c1);
+            const l2 = luminance(c2);
+            return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+         }
+
+         function checkContrast(color) {
+            return {
+               white: contrastRatio(color, "#ffffff") >= 4.5,
+               black: contrastRatio(color, "#000000") >= 4.5,
+            };
+         }
+
+         /* =====================================================
+       RENDERING
+       ===================================================== */
+         function renderPalette() {
+            const wrap = document.getElementById("swatches");
+            wrap.innerHTML = "";
+
+            currentPalette.forEach((hex) => {
+               const swatch = document.createElement("div");
+               swatch.className = "swatch";
+               swatch.tabIndex = 0;
+               swatch.style.background = hex;
+               swatch.setAttribute("role", "button");
+               swatch.setAttribute("aria-label", `Copy color ${hex}`);
+
+               const label = document.createElement("span");
+               label.textContent = hex.toUpperCase();
+
+               const contrast = checkContrast(hex);
+               const badges = document.createElement("div");
+               badges.className = "badges";
+
+               const bWhite = document.createElement("span");
+               bWhite.className = `badge ${contrast.white ? "pass" : "fail"}`;
+               bWhite.textContent = "AA on white";
+
+               const bBlack = document.createElement("span");
+               bBlack.className = `badge ${contrast.black ? "pass" : "fail"}`;
+               bBlack.textContent = "AA on black";
+
+               badges.append(bWhite, bBlack);
+               swatch.append(label, badges);
+
+               swatch.addEventListener("click", () => copyText(hex));
+               swatch.addEventListener("keydown", (e) => {
+                  if (e.key === "Enter") copyText(hex);
+               });
+
+               wrap.appendChild(swatch);
+            });
+         }
+
+         function renderPreview() {
+            const preview = document.getElementById("preview");
+            preview.innerHTML = `
+        <h1 style="font-family:'${currentFonts.heading}', serif">The Quick Brown Fox</h1>
+        <p style="font-family:'${currentFonts.body}', sans-serif">
+          Jumps over the lazy dog. This is a sample paragraph showing body text
+          rhythm, spacing, and tone in a realistic layout.
+        </p>
+        <button style="font-family:'${currentFonts.body}', sans-serif">Sample Button</button>
+      `;
+
+            document.getElementById("fontNames").textContent =
+               `${currentFonts.heading} / ${currentFonts.body}`;
+         }
+
+         /* =====================================================
+       FAVORITES
+       ===================================================== */
+         function loadFavorites() {
+            return JSON.parse(
+               localStorage.getItem("aesthetic.favorites") || "[]",
+            );
+         }
+
+         function saveFavorite() {
+            const favs = loadFavorites();
+            favs.push({ palette: currentPalette, fonts: currentFonts });
+            localStorage.setItem("aesthetic.favorites", JSON.stringify(favs));
+            renderFavorites();
+         }
+
+         function renderFavorites() {
+            const list = document.getElementById("favoritesList");
+            list.innerHTML = "";
+
+            loadFavorites().forEach((fav, i) => {
+               const row = document.createElement("div");
+               row.className = "favorite";
+
+               const apply = document.createElement("button");
+               apply.textContent = `${fav.fonts.heading} / ${fav.fonts.body}`;
+               apply.addEventListener("click", () => applyCombination(fav));
+
+               const del = document.createElement("button");
+               del.textContent = "✕";
+               del.setAttribute("aria-label", "Delete favorite");
+               del.addEventListener("click", () => {
+                  const favs = loadFavorites();
+                  favs.splice(i, 1);
+                  localStorage.setItem(
+                     "aesthetic.favorites",
+                     JSON.stringify(favs),
+                  );
+                  renderFavorites();
+               });
+
+               row.append(apply, del);
+               list.appendChild(row);
+            });
+         }
+
+         /* =====================================================
+       EXPORTS & CLIPBOARD
+       ===================================================== */
+         function copyText(text) {
+            if (navigator.clipboard) {
+               navigator.clipboard.writeText(text);
+            } else {
+               const ta = document.createElement("textarea");
+               ta.value = text;
+               document.body.appendChild(ta);
+               ta.select();
+               document.execCommand("copy");
+               ta.remove();
+            }
+         }
+
+         function exportCSSVars() {
+            let css = ":root {\n";
+            currentPalette.forEach(
+               (c, i) => (css += `  --color-${i + 1}: ${c};\n`),
+            );
+            css += `  --font-heading: '${currentFonts.heading}';\n`;
+            css += `  --font-body: '${currentFonts.body}';\n}`;
+            copyText(css);
+         }
+
+         function exportJSON() {
+            const data = { palette: currentPalette, fonts: currentFonts };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {
+               type: "application/json",
+            });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "aesthetic.json";
+            a.click();
+            URL.revokeObjectURL(url);
+         }
+
+         /* =====================================================
+       APPLY / SHUFFLE / INIT
+       ===================================================== */
+         function applyCombination({ palette, fonts }) {
+            currentPalette = palette;
+            currentFonts = fonts;
+            injectGoogleFont(fonts.heading);
+            injectGoogleFont(fonts.body);
+            renderPalette();
+            renderPreview();
+         }
+
+         function shuffleAll() {
+            currentPalette = getRandomPalette();
+            currentFonts = pickFontPair();
+            applyCombination({ palette: currentPalette, fonts: currentFonts });
+         }
+
+         function initTheme() {
+            const saved = localStorage.getItem("aesthetic.settings");
+            if (saved === "dark")
+               document.documentElement.classList.add("theme-dark");
+         }
+
+         document
+            .getElementById("shuffleBtn")
+            .addEventListener("click", shuffleAll);
+         document
+            .getElementById("saveBtn")
+            .addEventListener("click", saveFavorite);
+         document
+            .getElementById("copyCssBtn")
+            .addEventListener("click", exportCSSVars);
+         document
+            .getElementById("exportJsonBtn")
+            .addEventListener("click", exportJSON);
+
+         document
+            .getElementById("themeToggle")
+            .addEventListener("click", () => {
+               document.documentElement.classList.toggle("theme-dark");
+               localStorage.setItem(
+                  "aesthetic.settings",
+                  document.documentElement.classList.contains("theme-dark")
+                     ? "dark"
+                     : "light",
+               );
+            });
+
+         document.addEventListener("keydown", (e) => {
+            if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")
+               return;
+            if (e.code === "Space") {
+               e.preventDefault();
+               shuffleAll();
+            }
+            if (e.key.toLowerCase() === "s") saveFavorite();
+            if (e.key.toLowerCase() === "c") exportCSSVars();
+         });
+
+         /* =====================================================
+       BOOTSTRAP
+       ===================================================== */
+         initTheme();
+         applyCombination(DEFAULTS.Minimal);
+         renderFavorites();
+      </script>
+   </body>
+</html>
