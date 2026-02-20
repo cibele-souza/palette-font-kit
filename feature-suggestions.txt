@@ -1,0 +1,72 @@
+Quick prioritized roadmap (top picks)
+
+Live font preview with custom text, size, weight slider (MVP)
+Google Fonts / custom-font import picker
+Variable-font axis controls (weight, width, slant)
+Palette and CSS-variable export (color swatches → CSS custom properties / SCSS)
+Save/load presets (localStorage) + shareable URL export
+Export package (ZIP) with sample HTML + CSS
+Accessibility tools: contrast checker and suggested pairings
+Developer quality: tests, package.json, and GitHub Actions CI
+UX polish: responsive layout, dark mode, keyboard shortcuts
+Documentation and contributor files (README, CONTRIBUTING, LICENSE, demos)
+Feature details, implementation notes, and where to change
+
+Live font preview (MVP — high value)
+What: Text input for preview content, font-size selector, font-weight/line-height controls, and a preview area that updates in real-time.
+Files to change: index.html (UI), styles.css (styling), script.js (DOM + state).
+Contract:
+Inputs: user text, size, weight, selected font
+Outputs: live preview area rendering the text using chosen font settings
+Error modes: missing font fallback, invalid numeric inputs
+Success: preview updates within 100ms of user change
+Edge cases: extremely long text, empty text (use placeholder sample), fonts that fail to load (show fallback + message).
+Rough effort: small (a few hours).
+Google Fonts + custom font upload
+What: Search and add fonts from Google Fonts API; allow users to paste font-face URL or upload a .woff/.woff2 to preview.
+Files: add a small module in script.js, minor HTML UI changes.
+Notes: For Google Fonts, fetch metadata (no server needed) and dynamically inject <link href="..."> or @font-face rules. For uploads, use FileReader and create object URLs.
+Security: limit upload size and only accept known font MIME types.
+Rough effort: medium.
+Variable font axis sliders
+What: When a selected font is variable, show sliders for axes (wght, wdth, opsz...) and update font-variation-settings.
+Files: script.js, index.html, styles.css.
+Contract:
+Inputs: axis values from sliders
+Outputs: updated preview using style.fontVariationSettings or font-variation-settings in CSS
+Edge cases: font not variable, missing axes
+Rough effort: medium.
+Color palette tool + export CSS variables
+What: Add color swatches, editable hex inputs, sample background/foreground pairing, and an "Export CSS variables" button that copies CSS custom properties or downloads a .css file.
+Files: index.html, styles.css, script.js.
+Acceptance: exported CSS includes variables for each swatch and a sample usage snippet.
+Rough effort: small.
+Save/load presets + shareable URL
+What: Save current configuration (font, size, text, palette) to localStorage; optionally encode config in the URL (hash or query) for sharing.
+Files: script.js
+Notes: Use compact base64 or URL-safe JSON; include versioning to maintain compatibility.
+Edge cases: URL size limits for many assets (prefer localStorage + optional serverless gist if very large).
+Rough effort: small.
+Export ZIP of sample assets
+What: Build a small in-browser ZIP (JSZip) containing an example index.html, styles.css, and fonts/ (if possible) for download.
+Files: new dependency (add via package.json if building out), script.js.
+Rough effort: medium.
+Accessibility features (contrast checker, WCAG hints)
+What: Show contrast ratio between chosen foreground/background, flag if below WCAG AA/AAA, suggest alternate accessible colors from palette.
+Files: script.js, styles.css, add UI to index.html.
+Rough effort: small.
+Developer tooling: package.json, tests, CI
+What: Add package.json, small dev-deps (ESLint, Prettier, Vitest/Jest), and a GitHub Actions workflow to run lint/tests.
+Files: add package.json, .github/workflows/ci.yml, small test files (e.g., __tests__/utils.test.js).
+Rough effort: small-to-medium.
+UX / polish and docs
+What: Responsive CSS, dark-mode toggle, keyboard shortcuts for preview actions, better README with a "Try it" section and screenshots/demos, CONTRIBUTING.md, LICENSE.
+Files: styles.css, index.html, README.md.
+Rough effort: small.
+Edge cases to watch across features
+
+Fonts fail to load (network or CORS): show fallback message and CSS fallbacks.
+Large uploaded fonts: limit size; warn user and don't include in ZIP if too large.
+URL length limit when sharing rich presets: prefer localStorage + "Export JSON" fallback.
+Accessibility: ensure preview text contrast and text scaling works for large sizes.
+Cross-browser font-variation support (older browsers): fallback to font-weight
